@@ -1,0 +1,51 @@
+# Manutenção periódica do servidor: health-check, backup e limpeza de logs
+# via SSH. Requer os secrets DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY e
+# APP_URL configurados no repositório/environment.
+name: Manutenção do servidor
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # backup e limpeza diários às 04:00 UTC
+    - cron: "*/30 * * * *" # health-check a cada 30 minutos
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    if: github.event.schedule == '*/30 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verificar disponibilidade do serviço
+        run: bash scripts/server/health-check.sh "${{ secrets.APP_URL }}"
+
+  backup-and-cleanup:
+    if: github.event.schedule == '0 4 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Backup remoto
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
+            "bash -s" -- "$DEPLOY_PATH" < scripts/server/backup.sh
+
+      - name: Limpeza de logs e espaço em disco
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$DEPLOY_USER@$DEPLOY_HOST" \
+            "find /var/log -name '*.log' -mtime +14 -delete; docker system prune -af --filter 'until=168h' 2>/dev/null || true"

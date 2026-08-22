@@ -1,0 +1,42 @@
+# Deploy para projectos PHP. Apague este ficheiro se o projecto não usar
+# PHP.
+name: Deploy (PHP)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - run: composer install --no-dev --optimize-autoloader
+      - run: composer test --if-present
+
+      - name: Deploy via SSH (rsync + comandos pós-deploy)
+        if: false # active após configurar os secrets abaixo
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          rsync -az --exclude ".git" -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd $DEPLOY_PATH && php artisan migrate --force || true && sudo systemctl reload php-fpm"
+
+      - name: Health check pós-deploy
+        if: false
+        run: bash scripts/server/health-check.sh "${{ secrets.APP_URL }}"

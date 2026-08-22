@@ -1,0 +1,82 @@
+# ==== Vanguard IT — .gitignore genérico multi-linguagem ====
+# Apague as secções que não se aplicam à stack do projecto.
+
+# --- Segredos / ambiente ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+
+# --- Editores / IDEs ---
+.vscode/
+.idea/
+*.swp
+
+# --- Node.js / JavaScript / TypeScript ---
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.turbo/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Java / Kotlin ---
+target/
+*.class
+.gradle/
+build/
+
+# --- .NET ---
+bin/
+obj/
+*.user
+
+# --- Go ---
+/bin/
+*.exe
+*.test
+
+# --- PHP ---
+vendor/
+composer.phar
+
+# --- Ruby ---
+.bundle/
+vendor/bundle/
+
+# --- Rust ---
+/target/
+Cargo.lock
+
+# --- Logs e temporários ---
+*.log
+tmp/
+temp/
+*.tmp
+
+# --- Docker ---
+*.pid
+
+# --- Testes / cobertura ---
+.nyc_output/
+htmlcov/

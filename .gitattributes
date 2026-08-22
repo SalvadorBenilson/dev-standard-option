@@ -1,0 +1,28 @@
+# Normaliza fins de linha para todos os ficheiros de texto
+* text=auto eol=lf
+
+# Nunca normalizar binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.jar binary
+*.dll binary
+*.exe binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+
+# Ficheiros gerados que não devem entrar em diffs de PR
+*.min.js -diff linguist-generated
+*.min.css -diff linguist-generated
+package-lock.json -diff linguist-generated
+yarn.lock -diff linguist-generated
+pnpm-lock.yaml -diff linguist-generated
+composer.lock -diff linguist-generated
+poetry.lock -diff linguist-generated
+Gemfile.lock -diff linguist-generated

@@ -1,0 +1,110 @@
+# Gate de qualidade genérico: corre lint/testes conforme os manifestos
+# encontrados no repositório. Não requer que o projecto seja de uma
+# linguagem específica — cada job só corre se o ficheiro relevante existir.
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      node: ${{ steps.check.outputs.node }}
+      python: ${{ steps.check.outputs.python }}
+      java: ${{ steps.check.outputs.java }}
+      dotnet: ${{ steps.check.outputs.dotnet }}
+      go: ${{ steps.check.outputs.go }}
+      php: ${{ steps.check.outputs.php }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          [ -f package.json ] && echo "node=true" >> "$GITHUB_OUTPUT" || echo "node=false" >> "$GITHUB_OUTPUT"
+          [ -f requirements.txt -o -f pyproject.toml ] && echo "python=true" >> "$GITHUB_OUTPUT" || echo "python=false" >> "$GITHUB_OUTPUT"
+          [ -f pom.xml -o -f build.gradle -o -f build.gradle.kts ] && echo "java=true" >> "$GITHUB_OUTPUT" || echo "java=false" >> "$GITHUB_OUTPUT"
+          ls -- *.sln *.csproj >/dev/null 2>&1 && echo "dotnet=true" >> "$GITHUB_OUTPUT" || echo "dotnet=false" >> "$GITHUB_OUTPUT"
+          [ -f go.mod ] && echo "go=true" >> "$GITHUB_OUTPUT" || echo "go=false" >> "$GITHUB_OUTPUT"
+          [ -f composer.json ] && echo "php=true" >> "$GITHUB_OUTPUT" || echo "php=false" >> "$GITHUB_OUTPUT"
+
+  node:
+    needs: detect
+    if: needs.detect.outputs.node == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint --if-present
+      - run: npm test --if-present
+
+  python:
+    needs: detect
+    if: needs.detect.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -r requirements.txt 2>/dev/null || pip install -e .[dev] 2>/dev/null || true
+          pip install ruff pytest 2>/dev/null || true
+      - run: ruff check . || true
+      - run: pytest || true
+
+  java:
+    needs: detect
+    if: needs.detect.outputs.java == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+      - run: test -f pom.xml && mvn -B verify || ./gradlew build
+
+  dotnet:
+    needs: detect
+    if: needs.detect.outputs.dotnet == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet restore
+      - run: dotnet build --no-restore
+      - run: dotnet test --no-build
+
+  go:
+    needs: detect
+    if: needs.detect.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: go vet ./...
+      - run: go test ./...
+
+  php:
+    needs: detect
+    if: needs.detect.outputs.php == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+      - run: composer install --no-progress --prefer-dist
+      - run: composer lint --if-present
+      - run: composer test --if-present

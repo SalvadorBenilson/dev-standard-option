@@ -1,0 +1,8 @@
+# Donos de código — revisão obrigatória em PRs que tocam estes caminhos.
+# Substitua pelos utilizadores/equipas reais do projecto.
+
+* @vanguardit/core-team
+
+/.github/ @vanguardit/devops
+/docs/ @vanguardit/tech-leads
+/scripts/server/ @vanguardit/devops

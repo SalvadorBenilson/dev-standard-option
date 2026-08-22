@@ -1,0 +1,48 @@
+# Deploy para projectos Node.js. Apague este ficheiro se o projecto não usar
+# Node.js. Ajuste o passo "Deploy" ao destino real (SSH, PaaS, container).
+name: Deploy (Node.js)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test --if-present
+
+      # --- Escolha UM dos métodos de deploy abaixo ---
+
+      # Opção A: deploy via SSH para servidor próprio
+      - name: Deploy via SSH
+        if: false # active após configurar os secrets abaixo
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd $DEPLOY_PATH && git pull && npm ci --omit=dev && pm2 restart app || pm2 start npm --name app -- start"
+
+      # Opção B: build e push de imagem Docker (ver deploy-docker.yml)
+      # Opção C: deploy para PaaS (Vercel/Render/Railway) via action oficial
+
+      - name: Health check pós-deploy
+        if: false # active junto com a opção de deploy escolhida
+        run: bash scripts/server/health-check.sh "${{ secrets.APP_URL }}"

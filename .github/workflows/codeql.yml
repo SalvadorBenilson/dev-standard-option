@@ -1,0 +1,37 @@
+# Análise estática de segurança (CodeQL). Ajuste "languages" às linguagens
+# reais do projecto — ver lista suportada:
+# https://docs.github.com/code-security/codeql-cli/getting-started-with-the-codeql-cli/about-the-codeql-cli
+name: CodeQL
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 3 * * 1" # segunda-feira às 03:00 UTC
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # Ajuste esta lista às linguagens usadas no projecto
+        language: ["javascript-typescript"]
+        # Outras opções: python, java-kotlin, csharp, go, ruby, cpp
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - uses: github/codeql-action/autobuild@v3
+
+      - uses: github/codeql-action/analyze@v3

@@ -1,0 +1,29 @@
+# Marca issues e PRs inactivos como "stale" e fecha-os após um período de
+# graça, mantendo o backlog limpo.
+name: Marcar issues/PRs inactivos
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # diariamente às 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-stale: 30
+          days-before-close: 7
+          stale-issue-message: >
+            Esta issue está inactiva há 30 dias e será fechada em 7 dias se
+            não houver actividade. Comente para a manter aberta.
+          stale-pr-message: >
+            Este PR está inactivo há 30 dias e será fechado em 7 dias se não
+            houver actividade.
+          exempt-issue-labels: "pinned,security"
+          exempt-pr-labels: "pinned"

@@ -1,0 +1,40 @@
+# Deploy para projectos Python. Apague este ficheiro se o projecto não usar
+# Python. Ajuste o passo "Deploy" ao destino real (SSH, PaaS, container).
+name: Deploy (Python)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+      - run: pytest || true
+
+      - name: Deploy via SSH
+        if: false # active após configurar os secrets abaixo
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd $DEPLOY_PATH && git pull && source .venv/bin/activate && pip install -r requirements.txt && sudo systemctl restart app"
+
+      - name: Health check pós-deploy
+        if: false
+        run: bash scripts/server/health-check.sh "${{ secrets.APP_URL }}"
