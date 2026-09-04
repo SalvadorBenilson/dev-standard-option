@@ -32,6 +32,23 @@ quando faz sentido para o projecto em questão.
 | CI/CD e manutenção | [`.github/workflows/`](.github/workflows) | Deploy multi-linguagem, segurança, manutenção do servidor |
 | Scripts operacionais | [`scripts/server/`](scripts/server) | Deploy, backup, rollback, health-check do servidor |
 
+## Estrutura de pastas de domínio
+
+O código do projecto separa-se por domínio, cada um com o seu próprio
+`CLAUDE.md` (carregado apenas quando se trabalha nessa pasta):
+
+| Pasta | Contém |
+|---|---|
+| `backend/` | API, serviços, lógica de negócio |
+| `frontend/` | UI, SPA, app mobile |
+| `infra/` | Infra como código, configuração por ambiente |
+| `data/` | Migrações, seeds, pipelines de dados |
+
+Apague as pastas que não se aplicarem ao projecto (ex.: um serviço sem
+frontend próprio apaga `frontend/`). `.claude/rules/`, `.github/workflows/`
+e `scripts/server/` mantêm-se centralizados na raiz e aplicam-se a todo o
+repositório.
+
 ## Ficheiros de referência na raiz
 
 - `CONTRIBUTING.md` — como contribuir, fluxo de branches e commits

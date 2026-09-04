@@ -3,6 +3,11 @@
 
 * @vanguardit/core-team
 
+/backend/ @vanguardit/backend
+/frontend/ @vanguardit/frontend
+/infra/ @vanguardit/devops
+/data/ @vanguardit/backend
+
 /.github/ @vanguardit/devops
 /docs/ @vanguardit/tech-leads
 /scripts/server/ @vanguardit/devops

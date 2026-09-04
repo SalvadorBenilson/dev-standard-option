@@ -39,12 +39,18 @@ para diagramas e detalhe.
 ## Mapa do repositório
 
 ```
-src/            # código da aplicação
-tests/          # testes automatizados
+backend/        # API, serviços, lógica de negócio (CLAUDE.md próprio)
+frontend/       # UI / SPA / app mobile (CLAUDE.md próprio)
+infra/          # infra como código, ambientes (CLAUDE.md próprio)
+data/           # migrações, seeds, pipelines de dados (CLAUDE.md próprio)
 docs/           # documentação do projecto
 .github/        # CI/CD e templates
 scripts/server/ # scripts de deploy e manutenção
 ```
+
+Cada pasta de domínio (`backend/`, `frontend/`, `infra/`, `data/`) tem o seu
+próprio `CLAUDE.md`, carregado apenas quando se trabalha ali. Nem todo
+projecto precisa das quatro — apague as que não se aplicarem.
 
 ## Convenções da equipa
 
@@ -55,7 +61,7 @@ scripts/server/ # scripts de deploy e manutenção
 
 ## Regras e skills disponíveis
 
-- `.claude/rules/` — carregadas por âmbito (frontend, backend, API, base de
-  dados, segurança)
+- `.claude/rules/` — carregadas por âmbito (frontend, backend, infra, API,
+  base de dados, segurança)
 - `.claude/skills/` — playbooks para deploy, release notes, auditoria SEO
 - `.claude/agents/` — code-reviewer e security-auditor como sub-agentes isolados
